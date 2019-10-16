@@ -41,7 +41,7 @@ pipeline {
         
         stage('Override and Deploy BAR') {
          steps {
-                sh "/buildconductor/iib/run-automation.sh overrideAndDeploy commonframework na na na PBCIS webuser1 passw0rd TemperatureConverter TemperatureConverter/overrides/development.properties ../brokerFiles-load/DEV/PBCNODE.broker"
+                sh "/buildconductor/iib/run-automation.sh overrideAndDeploy commonframework na na na PBCIS webuser1 passw0rd RetryApplication overrides/RetryApplication-ST.properties ../brokerFiles-load/DEV/PBCNODE.broker"
         
           }
         }       
