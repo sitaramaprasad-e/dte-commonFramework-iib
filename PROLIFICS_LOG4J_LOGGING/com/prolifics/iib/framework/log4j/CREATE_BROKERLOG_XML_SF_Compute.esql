@@ -1,0 +1,84 @@
+BROKER SCHEMA com.prolifics.iib.framework.log4j
+
+
+CREATE COMPUTE MODULE CREATE_BROKERLOG_XML_SF_PrepareBrokerLogXML
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		SET OutputRoot = InputRoot;
+		DECLARE refEnvVar REFERENCE TO Environment.Variables;
+		IF refEnvVar.Operation='CREATE' THEN
+			DECLARE refOutAppender REFERENCE TO OutputRoot.XMLNSC.*:configuration.appender;
+			DECLARE refOutLogger REFERENCE TO OutputRoot.XMLNSC.*:configuration.logger;
+			
+			CALL Update_Appender_And_Logger(refOutAppender,refOutLogger);
+			SET OutputLocalEnvironment.Destination.File.Directory = refEnvVar.BrokerLogPath;
+			SET OutputLocalEnvironment.Destination.File.Name	  = 'brokerlog.xml';
+			PROPAGATE TO TERMINAL 1;
+		ELSE
+			DECLARE refOut REFERENCE TO OutputRoot.XMLNSC.*:configuration;
+			DECLARE varInterfaceNo CHARACTER CAST(refEnvVar.Log4jMessage.InterfaceNo AS CHARACTER);
+			DECLARE varAppender CHARACTER varInterfaceNo||'_appender';
+			
+			SET refEnvVar.AppenderExists[] = SELECT A.(XMLNSC.Attribute)name FROM refOut.appender[] AS A WHERE A.(XMLNSC.Attribute)name=varAppender;
+			
+			IF NOT EXISTS(refEnvVar.AppenderExists[]) THEN
+				DECLARE varIndex INTEGER CARDINALITY(refOut.appender[])+1;
+				SET refOut.appender[varIndex] = refOut.appender[varIndex-1];
+				SET refOut.logger[varIndex] = refOut.logger[varIndex-1];
+				
+				DECLARE refOutAppender REFERENCE TO refOut.appender[varIndex];
+				DECLARE refOutLogger REFERENCE TO refOut.logger[varIndex];
+				
+				CALL Update_Appender_And_Logger(refOutAppender,refOutLogger);
+				SET OutputLocalEnvironment.Destination.File.Directory = refEnvVar.BrokerLogPath;
+				SET OutputLocalEnvironment.Destination.File.Name	  = 'brokerlog.xml';
+				PROPAGATE TO TERMINAL 1;
+			ELSE
+				PROPAGATE TO TERMINAL 0;
+			END IF;
+		END IF;
+		RETURN FALSE;
+	END;
+	
+	CREATE PROCEDURE Update_Appender_And_Logger (IN refOutAppender REFERENCE, IN refOutLogger REFERENCE)
+	BEGIN
+		DECLARE varFileFlag BOOLEAN TRUE;
+		DECLARE varThresholdFlag BOOLEAN TRUE;
+		DECLARE refEnvVar REFERENCE TO Environment.Variables;
+		
+		DECLARE varFolderSeperator CHARACTER RIGHT(refEnvVar.BrokerLogPath,1);-- || RIGHT(refEnvVar.BrokerLogPath,1);--TODO //Folder seperator has to be changed//
+		DECLARE varInterfaceNo CHARACTER CAST(refEnvVar.Log4jMessage.InterfaceNo AS CHARACTER);
+		
+		DECLARE varLog4jLogFilePath CHARACTER refEnvVar.Log4jLogPath || varInterfaceNo || varFolderSeperator || varFolderSeperator; -- TODO //Optimize it. Using folderSeperator to get '//' as output instead of just '/'. On Unix - it might not need
+		DECLARE varApplication CHARACTER refEnvVar.Log4jMessage.Application;
+		
+		SET refOutAppender.(XMLNSC.Attribute)name = varInterfaceNo||'_appender';
+		MOVE refOutAppender FIRSTCHILD;
+		WHILE LASTMOVE(refOutAppender) AND (varFileFlag OR varThresholdFlag) DO
+			IF UPPER(refOutAppender.(XMLNSC.Attribute)name) = 'FILE' THEN
+				SET refOutAppender.(XMLNSC.Attribute)value  = varLog4jLogFilePath || varInterfaceNo || '_MessageFlows.log';
+				SET varFileFlag = FALSE;
+			ELSEIF UPPER(refOutAppender.(XMLNSC.Attribute)name) = 'THRESHOLD' THEN
+				SET refOutAppender.(XMLNSC.Attribute)value  = refEnvVar.DefaultLogLevel;
+				SET varThresholdFlag = FALSE;
+			END IF;
+			MOVE refOutAppender NEXTSIBLING;
+		END WHILE;
+		
+		SET refOutLogger.(XMLNSC.Attribute)name = varInterfaceNo||'_logger';
+		SET refOutLogger.level.(XMLNSC.Attribute)value = refEnvVar.DefaultLogLevel;
+		SET refOutLogger."appender-ref".(XMLNSC.Attribute)ref = varInterfaceNo||'_appender';
+	END;
+	
+END MODULE;
+
+
+CREATE COMPUTE MODULE CREATE_BROKERLOG_XML_SF_NoFileError
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		THROW USER EXCEPTION CATALOG 'MyCatalog' MESSAGE 9999 VALUES('Error in reading "brokerlog.xml" from template directory.');
+		RETURN FALSE;
+	END;
+	
+END MODULE;

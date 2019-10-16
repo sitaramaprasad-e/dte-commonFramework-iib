@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:com_prolifics_iib_framework_log4j_CREATE_BROKERLOG_XML_SF.subflow="com/prolifics/iib/framework/log4j/CREATE_BROKERLOG_XML_SF.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility"
+    nsURI="com/prolifics/iib/framework/log4j/PRO_LOG4J_MF.msgflow" nsPrefix="com_prolifics_iib_framework_log4j_PRO_LOG4J_MF.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.udpBrokerLogPath" name="udpBrokerLogPath" lowerBound="1" defaultValueLiteral="D:\\PRO_LAB\\PRO_LAB\\Config\\logging\\">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.udpDefaultLogLevel" name="udpDefaultLogLevel" lowerBound="1" defaultValueLiteral="DEBUG">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.udpLog4jLogPath" name="udpLog4jLogPath" lowerBound="1" defaultValueLiteral="D:\\PRO_LAB\\PRO_LAB\\LOGS\\">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="PRO_LOG4J_MF" bundleName="com/prolifics/iib/framework/log4j/PRO_LOG4J_MF" pluginId="PROLIFICS_LOG4J_LOGGING"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/PROLIFICS_LOG4J_LOGGING/icons/full/obj16/PRO_LOG4J_MF.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/PROLIFICS_LOG4J_LOGGING/icons/full/obj30/PRO_LOG4J_MF.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="110,143" queueName="PRO.LOG4J.IN.QL" messageDomainProperty="XMLNSC">
+        <translation xmi:type="utility:ConstantString" string="PRO.LOG4J.IN.QL"/>
+        <longDescription xmi:type="utility:ConstantString" string="This queue picks the constructed log message from the main flow"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="404,52" queueName="PRO.LOG4J.ERROR.QL">
+        <translation xmi:type="utility:ConstantString" string="PRO.LOG4J.ERROR.QL"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="252,51" computeExpression="esql://routine/com.prolifics.iib.framework.log4j#PRO_LOG4J_MF_Error.Main">
+        <translation xmi:type="utility:ConstantString" string="Error"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="240,143" computeExpression="esql://routine/com.prolifics.iib.framework.log4j#PRO_LOG4J_MF_CheckBrokerLogFile.Main" computeMode="destinationAndMessage">
+        <translation xmi:type="utility:ConstantString" string="CheckBrokerLogFile"/>
+        <longDescription xmi:type="utility:ConstantString" string="This node checks if the brokerlog file exists inn the desired place"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="580,144" computeExpression="esql://routine/com.prolifics.iib.framework.log4j#PRO_LOG4J_MF_WriteToLog4jFile.Main">
+        <translation xmi:type="utility:ConstantString" string="WriteToLog4JFile"/>
+        <longDescription xmi:type="utility:ConstantString" string="This node writes the logs to log folder"/>
+      </nodes>
+      <nodes xmi:type="com_prolifics_iib_framework_log4j_CREATE_BROKERLOG_XML_SF.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="359,144">
+        <translation xmi:type="utility:ConstantString" string="CREATE_BROKERLOG_XML_SF"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_3" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_5" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.Input"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.udpBrokerLogPath">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.udpBrokerLogPath" bundleName="com/prolifics/iib/framework/log4j/PRO_LOG4J_MF" pluginId="PROLIFICS_LOG4J_LOGGING"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.udpDefaultLogLevel">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.udpDefaultLogLevel" bundleName="com/prolifics/iib/framework/log4j/PRO_LOG4J_MF" pluginId="PROLIFICS_LOG4J_LOGGING"/>
+          <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.udpLog4jLogPath">
+            <propertyName xmi:type="utility:TranslatableString" key="Property.udpLog4jLogPath" bundleName="com/prolifics/iib/framework/log4j/PRO_LOG4J_MF" pluginId="PROLIFICS_LOG4J_LOGGING"/>
+          </propertyDescriptor>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>

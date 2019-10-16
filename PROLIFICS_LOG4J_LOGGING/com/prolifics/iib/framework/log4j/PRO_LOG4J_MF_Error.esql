@@ -1,0 +1,32 @@
+BROKER SCHEMA com.prolifics.iib.framework.log4j
+
+
+CREATE COMPUTE MODULE PRO_LOG4J_MF_Error
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+		CALL GetErrorDetails(InputExceptionList,Environment);
+		DECLARE refOut REFERENCE TO OutputRoot;
+		MOVE refOut LASTCHILD;
+		MOVE refOut LASTCHILD;
+		CREATE LASTCHILD OF refOut AS refOut NAME 'ExceptionDetails';
+		SET refOut.ErrorNo 		= Environment.messageNumber;
+		SET refOut.ErrorText 	= Environment.messageText;
+		RETURN TRUE;
+	END;
+	
+	CREATE PROCEDURE GetErrorDetails(IN refInEx reference, IN refEnv REFERENCE)
+	BEGIN
+		MOVE refInEx FIRSTCHILD;
+		WHILE lastmove(refInEx) DO
+			IF refInEx.Number IS NOT NULL THEN
+				SET refEnv.messageNumber = refInEx.Number;
+				SET refEnv.messageText = refInEx.Text;
+				FOR refInsert AS refInEx.Insert[] DO
+					SET refEnv.messageText = refEnv.messageText || ' - ' || refInsert.Text;
+				END FOR;
+			END IF;
+			MOVE refInEx LASTCHILD;
+		END WHILE;
+    END;
+END MODULE;

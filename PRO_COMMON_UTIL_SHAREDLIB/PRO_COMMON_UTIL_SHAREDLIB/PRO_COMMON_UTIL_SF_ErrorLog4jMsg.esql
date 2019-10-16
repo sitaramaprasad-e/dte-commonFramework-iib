@@ -1,0 +1,69 @@
+BROKER SCHEMA PRO_COMMON_UTIL_SHAREDLIB
+DECLARE ns NAMESPACE 'http://www.prolifics.com/iib/Log4jMessage';
+
+	
+CREATE COMPUTE MODULE PRO_COMMON_UTIL_SF_ConstructLog4JMsg
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		DECLARE cHostName CHARACTER UCASE(COALESCE(Environment.Variables.UIP_Metainfo.SystemInfo.HostName, gethostName())) || '|';
+		DECLARE cTimeStamp CHARACTER TRIM(TRANSLATE(CAST(CURRENT_TIMESTAMP AS CHARACTER), 'TIMESTAMP,''')) || '|';
+		
+		DECLARE refEnv REFERENCE TO Environment.Variables.Log4jFramework;
+		CREATE FIELD OutputRoot;
+		DECLARE refOut REFERENCE TO OutputRoot;
+		CREATE LASTCHILD OF OutputRoot As refOut DOMAIN 'XMLNSC' NAME 'XMLNSC';
+		CREATE LASTCHILD OF refOut As refOut NAMESPACE ns NAME 'Log4jMessage';
+		
+		SET refOut.Application = ApplicationLabel;
+		SET refOut.InterfaceNo = refEnv.InterfaceNo;
+		SET refOut.MessageFlow = MessageFlowLabel;
+		SET refOut.LogLevel = refEnv.LogLevel;
+		SET refOut.LogData = cHostName || cTimeStamp || refEnv.Data;
+		SET refOut.payload = InputRoot.XMLNSC;
+		
+		PROPAGATE TO TERMINAL 0 DELETE NONE;
+		RETURN FALSE;
+	END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE PRO_COMMON_UTIL_SF_ErrorLog4jMsg
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputLocalEnvironment = InputLocalEnvironment;
+		SET OutputRoot.XMLNSC.Log4jMessage =  Environment.Variables.Log4jFramework;
+		CALL GetErrorDetails(InputExceptionList,Environment);
+		DECLARE refOut REFERENCE TO OutputRoot;
+		MOVE refOut LASTCHILD;
+		MOVE refOut LASTCHILD;
+		CREATE LASTCHILD OF refOut AS refOut NAME 'ExceptionDetails';
+		SET refOut.ErrorNo 		= Environment.messageNumber;
+		SET refOut.ErrorText 	= '****Error occured client side****. '||Environment.messageText;
+		RETURN TRUE;
+	END;
+	
+	CREATE PROCEDURE GetErrorDetails(IN refInEx reference, IN refEnv REFERENCE)
+	BEGIN
+		MOVE refInEx FIRSTCHILD;
+		WHILE lastmove(refInEx) DO
+			IF refInEx.Number IS NOT NULL THEN
+				SET refEnv.messageNumber = refInEx.Number;
+				SET refEnv.messageText = refInEx.Text;
+				FOR refInsert AS refInEx.Insert[] DO
+					SET refEnv.messageText = refEnv.messageText || ' - ' || refInsert.Text;
+				END FOR;
+			END IF;
+			MOVE refInEx LASTCHILD;
+		END WHILE;
+    END;
+END MODULE;
+
+/*
+* Function Name      :gethostName
+* Parameters  : 
+*      RETURNS: CHARACTER   - string value --> Ex. 'ABCD'
+*/
+CREATE FUNCTION gethostName() 
+       RETURNS CHARACTER LANGUAGE JAVA EXTERNAL NAME
+       "com.prolifics.iib.commonservices.PRO_CMNSRV_GetDetails.getHostName";

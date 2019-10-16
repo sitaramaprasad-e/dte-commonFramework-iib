@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:PRO_COMMON_UTIL_SHAREDLIB_PRO_COMMON_UTIL_SF.subflow="PRO_COMMON_UTIL_SHAREDLIB/PRO_COMMON_UTIL_SF.subflow" xmlns:com_prolifics_common_exceptionHandler_commonExceptionHandler.subflow="com/prolifics/common/exceptionHandler/commonExceptionHandler.subflow" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" nsURI="RetryMechanism.msgflow" nsPrefix="RetryMechanism.msgflow">
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.conditionalLogging" name="conditionalLogging" defaultValueLiteral="Y">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.LogLevel" name="LogLevel" defaultValueLiteral="DEBUG">
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    </eStructuralFeatures>
+    <translation xmi:type="utility:TranslatableString" key="RetryMechanism" bundleName="RetryMechanism" pluginId="RetryApplication"/>
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/RetryApplication/icons/full/obj16/RetryMechanism.gif"/>
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/RetryApplication/icons/full/obj30/RetryMechanism.gif"/>
+    <composition>
+      <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="112,193" queueName="RETRY.IIB.QUEUE" messageDomainProperty="XMLNSC" resetBrowseTimeout="1800000">
+        <translation xmi:type="utility:ConstantString" string="RETRY.IIB.QUEUE"/>
+        <shortDescription xmi:type="utility:ConstantString" string="IIB will pick the input message which is placed by Datapower"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="363,195" computeExpression="esql://routine/#RetryMechanism_Compute1.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string="RetryMechanism_compute"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="738,197" queueName="METERALARMS.OMS.CEP" destinationMode="list">
+        <translation xmi:type="utility:ConstantString" string="METERALARMS.OMS.CEP"/>
+        <shortDescription xmi:type="utility:ConstantString" string="Datapower will pick the message to try the retry mechanism with in 30 min from the OutputDestinationQueue."/>
+      </nodes>
+      <nodes xmi:type="PRO_COMMON_UTIL_SHAREDLIB_PRO_COMMON_UTIL_SF.subflow:FCMComposite_1" xmi:id="FCMComposite_1_6" location="512,290">
+        <translation xmi:type="utility:ConstantString" string="PRO_COMMON_UTIL_SF"/>
+      </nodes>
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="711,298" computeExpression="esql://routine/#Logging_Compute1.Main" computeMode="all">
+        <translation xmi:type="utility:ConstantString" string=" Log_Compute"/>
+        <shortDescription xmi:type="utility:ConstantString" string="this node is seeting the LOGLevels"/>
+      </nodes>
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="855,294" queueName="METERALARMS.OMS.LOGGING" destinationMode="list">
+        <translation xmi:type="utility:ConstantString" string="METERALARMS.OMS.LOGGING"/>
+        <shortDescription xmi:type="utility:ConstantString" string="after the retry time exhausted , the message will be logged in the LoggingQueue."/>
+      </nodes>
+      <nodes xmi:type="com_prolifics_common_exceptionHandler_commonExceptionHandler.subflow:FCMComposite_1" xmi:id="FCMComposite_1_5" location="230,57">
+        <translation xmi:type="utility:ConstantString" string="commonExceptionHandler"/>
+        <shortDescription xmi:type="utility:ConstantString" string="the common exception handling will be handled by this flow"/>
+      </nodes>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_6" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.Output" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.Input"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_4" sourceTerminalName="OutTerminal.out2" targetTerminalName="InTerminal.in"/>
+    </composition>
+    <propertyOrganizer>
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.conditionalLogging">
+        <propertyName xmi:type="utility:TranslatableString" key="Property.conditionalLogging" bundleName="RetryMechanism" pluginId="RetryApplication"/>
+        <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.LogLevel">
+          <propertyName xmi:type="utility:TranslatableString" key="Property.LogLevel" bundleName="RetryMechanism" pluginId="RetryApplication"/>
+        </propertyDescriptor>
+      </propertyDescriptor>
+    </propertyOrganizer>
+    <stickyBoard/>
+  </eClassifiers>
+</ecore:EPackage>
