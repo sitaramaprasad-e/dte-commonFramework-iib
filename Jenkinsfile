@@ -33,7 +33,7 @@ pipeline {
        
         stage('Build BAR') {
             steps {
-                sh "/buildconductor/iib/run-automation.sh build commonframework 'RetryApplication PROLIFICS_LOG4J_LOGGING commonExceptionHandler PRO_COMMON_UTIL_SHAREDLIB'" 
+                sh "/buildconductor/iib/run-automation.sh build commonframework RetryApplication" 
             }
         }   
         
