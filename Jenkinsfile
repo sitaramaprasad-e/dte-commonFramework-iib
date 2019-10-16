@@ -33,7 +33,7 @@ pipeline {
        
         stage('Build BAR') {
             steps {
-                sh "/buildconductor/iib/run-automation.sh build commonframework  'RetryApplication PROLIFICS_LOG4J_LOGGING commonExceptionHandler PRO_COMMON_UTIL_SHAREDLIB'" 
+                sh "/buildconductor/iib/run-automation.sh build commonframework 'RetryApplication PROLIFICS_LOG4J_LOGGING commonExceptionHandler PRO_COMMON_UTIL_SHAREDLIB'" 
             }
         }   
         
@@ -41,7 +41,7 @@ pipeline {
         
         stage('Override and Deploy BAR') {
          steps {
-                sh "/buildconductor/iib/run-automation.sh overrideAndDeploy tempconvert na na na PBCIS webuser1 passw0rd TemperatureConverter TemperatureConverter/overrides/development.properties ../brokerFiles-load/DEV/PBCNODE.broker"
+                sh "/buildconductor/iib/run-automation.sh overrideAndDeploy commonframework na na na PBCIS webuser1 passw0rd TemperatureConverter TemperatureConverter/overrides/development.properties ../brokerFiles-load/DEV/PBCNODE.broker"
         
           }
         }       
