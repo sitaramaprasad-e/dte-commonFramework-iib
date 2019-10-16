@@ -24,7 +24,7 @@ pipeline {
        
        stage('Checkout .brokerFile'){
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/feature']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'brokerFiles-load']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/sitaramaprasad-e/brokerFiles-iib.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'brokerFiles-load']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/sitaramaprasad-e/brokerFiles-iib.git']]])
             }
           
        }  
