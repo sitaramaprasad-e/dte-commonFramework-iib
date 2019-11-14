@@ -4,7 +4,7 @@ pipeline {
     
     agent {
         docker { 
-            image 'greghodgkinson/jenkins-buildconductor-iib:edge' 
+            image 'sitaramdocke/jenkins-buildconductor-iib:v1' 
             label 'docker'
             args '-u root'
         }
@@ -31,11 +31,11 @@ pipeline {
        
        // Build BAR file from source code
        
-        stage('Build BAR') {
-            steps {
-                sh "/buildconductor/iib/run-automation.sh build commonframework 'RetryApplication PROLIFICS_LOG4J_LOGGING PRO_COMMON_UTIL_SHAREDLIB commonExceptionHandler' IIB" 
-            }
-        }   
+      //  stage('Build BAR') {
+        //    steps {
+          //      sh "/buildconductor/iib/run-automation.sh build commonframework 'RetryApplication PROLIFICS_LOG4J_LOGGING PRO_COMMON_UTIL_SHAREDLIB commonExceptionHandler' IIB" 
+            //}
+       // }   
         
         // Either override and deploy the BAR (with or without broker file), or upload it to UCD so it can be deployed from there (one of the below steps should be uncommented)
         
