@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema targetNamespace="com.prolifics.iib.transactionids"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ns0="com.prolifics.iib.transactionids">
+	<xsd:complexType name="TransIdsMsgType">
+		<xsd:all>
+			<xsd:element name="LocalTransId" type="xsd:string" nillable="false" />
+			<xsd:element name="ParentTransId" type="xsd:string" />
+			<xsd:element name="GlobalTransId" type="xsd:string" />
+		</xsd:all>
+	</xsd:complexType>
+	<xsd:element name="TransactionIdsMsg" type="ns0:TransIdsMsgType" />
+</xsd:schema>

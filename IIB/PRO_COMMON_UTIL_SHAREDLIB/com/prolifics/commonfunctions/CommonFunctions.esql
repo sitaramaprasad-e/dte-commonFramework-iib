@@ -1,0 +1,320 @@
+BROKER SCHEMA com.prolifics.commonfunctions
+
+
+
+
+DECLARE udpPropertyPath EXTERNAL CHARACTER '';
+DECLARE udpSourceSystem EXTERNAL CHARACTER '';
+DECLARE udpTargetSystem EXTERNAL CHARACTER '';
+DECLARE udpMessageType EXTERNAL CHARACTER '';
+DECLARE udpServiceVersion EXTERNAL CHARACTER '';
+DECLARE rc BOOLEAN;
+DECLARE cIntermVal CHARACTER '_IntermVal';
+/*
+* Function Name	:getpropertyValue
+* Parameters	:
+* 	IN: CHARACTER param	- Property Name  --> Ex: EmailSourceQueue 
+* 	RETURNS: CHARACTER	- string value --> Ex. 'ABCD'
+*/
+--CREATE FUNCTION getpropertyValue(IN param CHARACTER,IN parameter CHARACTER) 
+--	RETURNS CHARACTER LANGUAGE JAVA EXTERNAL NAME
+--	"com.prolifics.iib.commonservices.PRO_CMNSRV_GetDetails.getpropertyDetails"; 
+
+
+	/*
+	* Procedure Name	: pInitializeMetaData
+	* Parameters		 
+	*           Input   : InputRoot, Environment
+	*			Output  : NA
+	* Description 		: Initialize Metadata	
+	*/
+CREATE PROCEDURE pInitializeMetaData(IN refInputRoot REFERENCE, IN refEnv REFERENCE) BEGIN
+		
+		DECLARE cLogFileName, sFileName, cCacheKeyStatus CHARACTER;
+		/* Initialize Log4j*/
+		--CALL getLog4jLogFileName(udpLogFilePath || MessageFlowLabel || '.log') INTO cLogFileName;
+		--CALL com.mizuho.logservice.Initialize_Log4j();
+				
+		SET refEnv.Variables.usrData.WarningFlag                           = FALSE;
+	    SET refEnv.Variables.UIP_Metainfo.TransactionInfo.SourceSystem 	= udpSourceSystem;
+		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.TargetSystem 	= udpTargetSystem;
+		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.Encoding 		= FIELDVALUE(refInputRoot.MQMD.Encoding); 
+		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.CCSID 			= FIELDVALUE(refInputRoot.MQMD.CodedCharSetId); 
+	  	SET refEnv.Variables.UIP_Metainfo.TransactionInfo.LocalTxId 		= SUBSTRING(CAST(refInputRoot.MQMD.MsgId AS CHAR) FROM 3 FOR 48); 
+	  	IF SUBSTRING(CAST(refInputRoot.MQMD.GroupId AS CHAR) FROM 3 FOR 48) <> '000000000000000000000000000000000000000000000000' THEN
+	 		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.ParentTxId 		= SUBSTRING(CAST(refInputRoot.MQMD.GroupId AS CHAR) FROM 3 FOR 48);
+	  	END IF; 
+	 	SET refEnv.Variables.UIP_Metainfo.TransactionInfo.GblTxId 		= ''; --fname; 
+	 	SET refEnv.Variables.UIP_Metainfo.TransactionInfo.TxStartTime 	= FIELDVALUE(refInputRoot.Properties.CreationTime); 
+		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.Service 			= '';
+		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.ServiceVersion 	= udpServiceVersion; --'1.0';
+ 		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.SourceSubSystem 	= '';
+  		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.SourceUserId 	= FIELDVALUE(refInputRoot.MQMD.UserIdentifier);
+		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.TargetSubSystem 	= '';
+		SET refEnv.Variables.UIP_Metainfo.TransactionInfo.Status 			= udpMessageType; --'REQ';
+									
+ 	--	SET refEnv.Variables.UIP_Metainfo.SystemInfo.Env 		= 'DEV';
+		SET refEnv.Variables.UIP_Metainfo.SystemInfo.NodeName 	= BrokerName;
+		SET refEnv.Variables.UIP_Metainfo.SystemInfo.ISName 	= ExecutionGroupLabel;
+		SET refEnv.Variables.UIP_Metainfo.SystemInfo.AppName 	= ApplicationLabel;
+		  
+		SET refEnv.Variables.UIP_Metainfo.ErrorInfo.ErrorNode 		= '';
+		SET refEnv.Variables.UIP_Metainfo.ErrorInfo.ErrorCode 		= '';
+		SET refEnv.Variables.UIP_Metainfo.ErrorInfo.ErrorType 		= '';
+		SET refEnv.Variables.UIP_Metainfo.ErrorInfo.ErrorMessage 	= '';
+		SET refEnv.Variables.UIP_Metainfo.ErrorInfo.ErrorDesc		= '';	
+		
+		SET refEnv.Variables.UIP_Metainfo.AdditionalInfo.RecordCount = '';
+		SET refEnv.Variables.UIP_Metainfo.AdditionalInfo.Ph_1 		  = '';
+		SET refEnv.Variables.UIP_Metainfo.AdditionalInfo.Ph_2 		  = '';
+		
+		SET refEnv.Variables.AppData.MessageisCompleteFile = FALSE;
+		SET refEnv.Variables.AppData.MessageisPartofGroupMessage = FALSE;
+		SET refEnv.Variables.AppData.MessageisLastGroupMessage = FALSE;
+		SET refEnv.Variables.AppData.MessageisLastGroupMessage = FALSE;
+				
+END;
+
+
+CREATE FUNCTION pFormatDate( ) RETURNS CHARACTER
+BEGIN
+	
+	DECLARE tDate DATE CURRENT_DATE;
+	DECLARE cDateFormatted CHARACTER;
+	DECLARE cDateFormatPattern CHARACTER 'yyyyMMdd';
+	
+	SET cDateFormatted = CAST(tDate AS CHARACTER FORMAT cDateFormatPattern);
+	
+	
+	RETURN cDateFormatted;
+END;
+
+CREATE FUNCTION pFormatSequentialNo(IN cSequenceNo CHARACTER) RETURNS CHARACTER
+BEGIN
+	
+	DECLARE iLength INTEGER LENGTH(cSequenceNo);
+	DECLARE cSequenceNoFormatted CHARACTER;
+	DECLARE cDateFormatPattern CHARACTER 'YYYMMDD';
+	
+	IF iLength < 5 THEN
+		CASE iLength
+		WHEN 1 THEN
+			SET cSequenceNoFormatted = '0000' || cSequenceNo;
+		WHEN 2 THEN
+			SET cSequenceNoFormatted = '000' || cSequenceNo;
+		WHEN 3 THEN
+			SET cSequenceNoFormatted = '00' || cSequenceNo;
+		WHEN 4 THEN
+			SET cSequenceNoFormatted = '0' || cSequenceNo;
+		END CASE;
+	END IF;
+	
+	RETURN cSequenceNoFormatted;
+END;
+
+CREATE FUNCTION getFromSequentialNoCache(in refEnv REFERENCE) RETURNS INTEGER
+BEGIN
+	
+	DECLARE iSequenceNoGenerated INTEGER 1;
+	DECLARE cSequenceNoGenerated CHARACTER '';
+	
+	SET iSequenceNoGenerated = CAST(ROUND(RAND() * 10000, 0) AS INTEGER);
+	
+	SET refEnv.Variables.cSequenceNoGenerated = PASSTHRU('SELECT ACBS_GBASE_GL_NY_SEQ.nextval AS NEXTVAL FROM DUAL;');
+	SET iSequenceNoGenerated = refEnv.Variables.cSequenceNoGenerated.NEXTVAL; 
+	
+	
+	RETURN iSequenceNoGenerated;
+END;
+
+/*
+* Function Name	:IsNotBlank -  It checks whether the input field is non-blank and not null, OR not.
+* Parameters	:
+* 	IN: Reference param 
+* 	RETURNS: BOOLEAN if the input field is non-blank and not null
+*/
+CREATE FUNCTION IsNotBlank(IN refIn REFERENCE) RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE varResult BOOLEAN FALSE;
+		IF refIn IS NOT NULL AND TRIM(refIn) <> '' THEN
+			SET varResult =  TRUE;
+		END IF;
+		RETURN varResult;
+	END;
+
+/*
+* Function Name	: SendToLog4jQueue -  It sends the log4j logging data to Log4jFramework queue.
+* Parameters	:
+* 	IN: Reference param refEnv is "Environment.Variables.Log4j". It should contain two elements Data & LogLevel. 
+*	i.e. "Environment.Variables.Log4j.Data",
+*		 "Environment.Variables.Log4j.LogLevel"
+*		 "Environment.Variables.Log4j.InterfaceNo"
+* 	IN: LogLevel is "ERROR/INFO/DEBUG". It has has to be one of the those 3 levels.
+*/
+CREATE FUNCTION SendToLog4jQueue(IN refEnv REFERENCE)
+	BEGIN
+		PROPAGATE TO LABEL 'SendToLog4JQ' DELETE NONE;
+	
+		
+	END;
+
+
+--CREATE FUNCTION getQueueDepth(IN QMGR CHARACTER, IN QName CHARACTER) 
+--	RETURNS INTEGER LANGUAGE JAVA EXTERNAL NAME
+--		"com.prolifics.iib.commonservices.PRO_CMNSRV_GetDetails.currentQDepth";
+--	
+--	
+--
+--CREATE FUNCTION getRemoteQueueDepth(IN QMGR CHARACTER, IN QName CHARACTER,IN Channel CHARACTER, IN Host CHARACTER,IN Port INTEGER) 
+--	RETURNS INTEGER LANGUAGE JAVA EXTERNAL NAME
+--	"com.prolifics.iib.commonservices.PRO_CMNSRV_GetDetails.currentRemoteQDepth";
+--
+--CREATE FUNCTION StartOrStopMessageFlow(IN BrokerName CHARACTER, IN EGName CHARACTER, IN MsgFlowName CHARACTER, IN AppName CHARACTER, IN Action CHARACTER) 
+--	RETURNS BOOLEAN LANGUAGE JAVA EXTERNAL NAME
+--	"com.prolifics.iib.commonservices.PRO_CMNSRV_GetDetails.StartOrStopMessageFlow";
+--	
+/*
+* Function Name	: pCurrencyFormatV2 -  It converts the amount to GBASE required format .
+* Parameters	:
+* 	IN : cAmount 	-> Amount to be converted
+	IN : cCurrency 	-> Currency type (USD, AUD, INR, etc...
+* 	IN : refEnv 	-> Environment
+*/	
+	
+
+
+
+/*
+* Function Name :AccQueueHasMessages
+* Parameters :
+* IN: CHARACTER param - queueManager Name
+* IN CHARACTER param - queueName
+* RETURNS: CHARACTER - string value --> Ex. 'TRUE' or 'FALSE'
+*/
+--CREATE FUNCTION AccQueueHasMessages(IN queueManager CHARACTER, IN queueName CHARACTER) RETURNS CHARACTER
+--BEGIN
+--	DECLARE queuDepth INTEGER getQueueDepth(queueManager, queueName);
+--
+--	IF queuDepth = 0 THEN
+--		RETURN 'FALSE';
+--	ELSE
+--		RETURN 'TRUE';
+--	END IF;
+--END;
+
+/*
+* Description :Validates GC data
+* Parameters :
+* IN: CHARACTER param - varInterfaceName( used for map)
+* IN: CHARACTER param - varMapName
+* IN: CHARACTER parm  - varKey
+* IN: CHARACTER parm  - varTrackingIds
+* IN: REFERENCE parm  - refLog(Log4j Environment variable reference)
+* IN: CHARACTER parm  - varLogApp(Application name to log the log4j logs)
+* No RETURN type: It throws exception if GC has intermediate value
+*/
+--CREATE PROCEDURE ValidateGCSimpleData (IN varInterfaceName CHARACTER, IN varMapName CHARACTER, IN varKey CHARACTER, 
+--	IN varTrackingIds CHARACTER, IN refLog REFERENCE, IN varLogApp CHARACTER)
+--	BEGIN
+--		DECLARE cGCValue CHARACTER GetSimpleDataFromCache(varInterfaceName, varMapName, varKey);
+--		CALL com.mizuho.uiputil.logMsg(refLog, varLogApp, 'DEBUG', varTrackingIds|| ' verifying ' || varMapName || '-' || varKey || ' in GC for intermediate value.');
+--		IF CONTAINS(cGCValue, cIntermVal) THEN
+--			CALL com.mizuho.uiputil.logMsg(refLog, varLogApp, 'DEBUG', varTrackingIds|| varMapName || '-' || varKey||' value is corrupted in GlobalCache : ' || cGCValue);
+--			THROW USER EXCEPTION CATALOG 'UIP_UNKNOWN_ERROR' MESSAGE 50101 VALUES(varKey||' value is corrupted in GlobalCache : ' || cGCValue);
+--		END IF;
+--	END;
+
+/*
+* Description :Updates GC data with intermediate value
+* Parameters :
+* IN: CHARACTER param - varInterfaceName( used for map)
+* IN: CHARACTER param - varMapName
+* IN: CHARACTER parm  - varKey
+* IN: REFERENCE parm  - refEnvGC(GC Environment variable reference)
+* IN: CHARACTER parm  - varTrackingIds
+* IN: REFERENCE parm  - refLog(Log4j Environment variable reference)
+* IN: CHARACTER parm  - varLogApp(Application name to log the log4j logs)
+* No RETURN type:
+*/
+--CREATE PROCEDURE SetGCIntermSimpleData (IN varInterfaceName CHARACTER, IN varMapName CHARACTER, IN varKey CHARACTER,
+--	 IN refEnvGC REFERENCE, IN varTrackingIds CHARACTER, IN refLog REFERENCE, IN varLogApp CHARACTER)
+--	BEGIN
+--		DECLARE cGCValue CHARACTER GetSimpleDataFromCache(varInterfaceName, varMapName, varKey);
+--		DECLARE varPutmapstatus CHARACTER PutSimpleDataIntoCache(varInterfaceName, varMapName, varKey, cGCValue||cIntermVal, 'P', refEnvGC);
+--		CALL com.mizuho.uiputil.logMsg(refLog, varLogApp, 'DEBUG', varTrackingIds|| varMapName || '-' || varKey || ' is set with intermediate value ' || cGCValue||cIntermVal || ' in GC.');
+--	END;
+
+/*
+* Description :Resets intermediate values in GC with actual/previous value 
+* Parameters :
+* IN: CHARACTER param - varInterfaceName( used for map)
+* IN: CHARACTER param - varMapName
+* IN: CHARACTER parm  - varKey
+* IN: REFERENCE parm  - refEnvGC(GC Environment variable reference)
+* IN: CHARACTER parm  - varTrackingIds
+* IN: REFERENCE parm  - refLog(Log4j Environment variable reference)
+* IN: CHARACTER parm  - varLogApp(Application name to log the log4j logs)
+* No RETURN type: 
+*/
+--CREATE PROCEDURE ResetGCIntermSimpleData (IN varInterfaceName CHARACTER, IN varMapName CHARACTER, IN varKey CHARACTER, 
+--	IN refEnvGC REFERENCE, IN varTrackingIds CHARACTER, IN refLog REFERENCE, IN varLogApp CHARACTER)
+--	BEGIN
+--		DECLARE cGCValue CHARACTER GetSimpleDataFromCache(varInterfaceName, varMapName, varKey);
+--		IF CONTAINS(cGCValue, cIntermVal) THEN
+--			DECLARE cIntermValue CHARACTER cGCValue;
+--			SET cGCValue = REPLACE(cGCValue, cIntermVal, '');
+--			DECLARE varPutmapstatus CHARACTER PutSimpleDataIntoCache(varInterfaceName, varMapName, varKey, cGCValue, 'P', refEnvGC);
+--			CALL com.mizuho.uiputil.logMsg(refLog, varLogApp, 'DEBUG', varTrackingIds|| varMapName || '-' || varKey || 'is updated from intermediate value ' || cIntermValue || ' to ' || cGCValue ||' in GC.');
+--		END IF;
+--	END;
+
+	/****************************************************************
+	* Procedure Name	: pCurrencyFormatV3
+	* Description		: Transforms amount from ACBS to URBIS format
+	* Parameters		: Amount, Currency, Env Reference
+	* Functionality		: 
+		•         Query the Currency Table with the currency code of the data record
+		•         Insert commas (thousands separator)
+		•         Insert period (decimal separator)
+		•         Preserve 0 as a whole part for the AMOUNT(s) which are less then 1.00
+		•         Format decimal part depending on the currency precision value of the transaction currency-
+			1.    The currency with no decimal fractions, such as JPY: Set only integral part of Amount. Do not set the period and decimal fractions.
+			2.    The currency with 2 digits of decimal fractions: Set Amount with  two digits in the decimal part).
+			3.    The currency with 3 digits of decimal fractions: Put 0 at the end of Amount and set the Amount with three digits in the decimal part
+	****************************************************************/
+--	CREATE PROCEDURE pCurrencyFormatV3(IN varAmount CHARACTER, IN varCurrency CHARACTER, IN refEnv REFERENCE) RETURNS CHARACTER BEGIN
+--		
+--		CREATE FIELD refEnv.Variables.GC;
+--		DECLARE cPrecision CHARACTER com.mizuho.gc.GetPrecisionP('UIP_CURRENCY', varCurrency, refEnv.Variables.GC);
+--		DECLARE iPrecision INTEGER CAST(CAST(cPrecision AS DECIMAL) AS INTEGER);
+--		
+--		SET varAmount = TRANSLATE(varAmount, ',', '');
+--		IF CAST(TRIM(varAmount) AS DECIMAL) > 0 THEN
+--			DECLARE varAmountBeforePeriod CHARACTER TRIM( LEADING '0' FROM TRIM(SUBSTRING(varAmount BEFORE '.')));
+--			IF varAmountBeforePeriod = '' THEN
+--				SET varAmountBeforePeriod = '0';
+--			END IF;
+--	
+--			DECLARE varAmountPrecision CHARACTER COALESCE( TRIM(SUBSTRING(varAmount AFTER '.')), '000');
+--			SET varAmountPrecision = SUBSTRING(varAmountPrecision FROM 1 FOR iPrecision) || LEFT(REPLICATE('0',iPrecision), iPrecision- LENGTH(varAmountPrecision));
+--			
+--			DECLARE varFormattedIntegralpart CHARACTER '';
+--			DECLARE iRemCount, iLength INTEGER LENGTH(varAmountBeforePeriod); 
+--			WHILE(iRemCount >=3) DO
+--				SET varFormattedIntegralpart = ',' || RIGHT(varAmountBeforePeriod,3) || varFormattedIntegralpart;
+--				SET varAmountBeforePeriod = LEFT(varAmountBeforePeriod, LENGTH(varAmountBeforePeriod)-3);
+--				SET iRemCount = iRemCount -3;
+--			END WHILE;
+--			SET varFormattedIntegralpart = varAmountBeforePeriod || varFormattedIntegralpart;
+--			IF iPrecision > 0 THEN
+--				SET varAmount = TRIM(LEADING ',' FROM varFormattedIntegralpart) || '.' || varAmountPrecision;
+--			ELSE
+--				SET varAmount = TRIM(LEADING ',' FROM varFormattedIntegralpart);
+--			END IF;
+--		ELSE
+--			SET varAmount = '0';
+--		END IF;
+--	
+--		RETURN varAmount;
+--	END;

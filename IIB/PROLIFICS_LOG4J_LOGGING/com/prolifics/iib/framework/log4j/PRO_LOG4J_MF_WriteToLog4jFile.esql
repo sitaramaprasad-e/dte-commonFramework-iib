@@ -1,0 +1,34 @@
+BROKER SCHEMA com.prolifics.iib.framework.log4j
+-- DECLARE slog4jInit SHARED BOOLEAN FALSE; 
+
+CREATE COMPUTE MODULE PRO_LOG4J_MF_WriteToLog4jFile
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		/*
+		IF NOT slog4jInit THEN
+			SET slog4jInit =  initLog4j(udpBrokerLogPath || 'brokerlog.xml');
+		END IF;
+		*/
+			
+		DECLARE slog4jInit BOOLEAN initLog4j(udpBrokerLogPath || 'brokerlog.xml');
+		DECLARE varMessageFlow CHARACTER Environment.Variables.Log4jMessage.MessageFlow;
+		DECLARE varLogLevel CHARACTER Environment.Variables.Log4jMessage.LogLevel;
+		DECLARE varLogData CHARACTER Environment.Variables.Log4jMessage.LogData;
+		DECLARE varLogger CHARACTER Environment.Variables.Log4jMessage.InterfaceNo || '_logger';
+		
+		DECLARE log4jWrite BOOLEAN log4j_1_1(varMessageFlow,varLogger,varLogLevel,varLogData);
+		RETURN FALSE;
+		
+	END;
+	
+	CREATE FUNCTION initLog4j( IN CONFIG_FILE_NAME CHARACTER )
+	   RETURNS BOOLEAN
+	   LANGUAGE JAVA
+	   EXTERNAL NAME "com.ibm.broker.IAM3.Log4jNode.initLog4j";
+   
+   CREATE FUNCTION log4j_1_1( IN COMPONENT_NAME CHARACTER, IN LOGGER_NAME CHARACTER, IN LEVEL CHARACTER, IN TEXT CHARACTER )
+		   RETURNS BOOLEAN 
+		   LANGUAGE JAVA
+		   EXTERNAL NAME "com.ibm.broker.IAM3.Log4jNode.log";
+END MODULE;

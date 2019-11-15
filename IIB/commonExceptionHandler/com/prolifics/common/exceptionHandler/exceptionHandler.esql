@@ -1,0 +1,199 @@
+BROKER SCHEMA com.prolifics.common.exceptionHandler
+DECLARE Ch_InterfaceNo  EXTERNAL CHARACTER '';
+/***********************************************************************************************************************************
+* COPYRIGHT. PROLIFICS CORPORATION LIMITED. ALL RIGHTS RESERVED. NO PART OF THIS SOURCE CODE MAY BE
+* REPRODUCED, STORED IN A RETRIEVAL SYSTEM, OR TRANSMITTED, IN ANY FORM OR BY ANY MEANS,
+* ELECTRONIC, MECHANICAL, PHOTOCOPYING, RECORDING OR OTHERWISE, WITHOUT THE PRIOR WRITTEN PERMISSION
+* OF PROLIFICS CORPORATION LIMITED
+************************************************************************************************************************************
+*************************************************************************************************************************************
+* This module is a generic component that will be used to handle the Error & UseException occur in main msgflow	 
+* The module will send output to two different queues depending on type of error. It can be data error that includes
+* errors like parsing error, user defined error etc. and system errors like queue not available, queue misssing etc.
+* The module can be customized as per required format of error message based on the requirement.
+************************************************************************************************************************************
+*/
+CREATE COMPUTE MODULE exceptionHandler_Compute
+	DECLARE varLocalTxId CHARACTER SUBSTRING(CAST(InputRoot.MQMD.MsgId AS CHAR) FROM 3 FOR 48);
+	DECLARE varParentTxId CHARACTER COALESCE(InputRoot.MQRFH2.usr.ParentTrxID,'NOT SET');
+	DECLARE varTrackingIds CHARACTER 'LocalTxId:'||varLocalTxId||': ';
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		--Declare variables
+		
+		IF(NOT EXISTS(Environment.Variables[])) THEN
+			CREATE FIELD Environment.Variables;
+		END IF;
+		DECLARE Ch_emptyValue			CHARACTER		'';
+		DECLARE Ch_Colon				CHARACTER		' : ';
+		DECLARE Ref_Input				REFERENCE TO 	InputRoot;
+		DECLARE Ref_EnVar				REFERENCE TO 	Environment.Variables;
+		DECLARE Bl_ExceptionFlag,
+			 	Bl_ParserExcFlag		BOOLEAN 	FALSE;
+		DECLARE Ch_ExceptionType 		CHARACTER;
+		DECLARE Ch_ErrorTmp				CHARACTER 	Ch_emptyValue;
+		DECLARE In_PosTmp				INTEGER;
+		DECLARE Ref_InnerException		REFERENCE TO InputExceptionList.*[1];
+		DECLARE Ref_InsertList			REFERENCE TO Ref_InnerException.Insert;
+		DECLARE Ref_EnvErrorLog 		REFERENCE TO Environment.Variables.ErrorLog;
+		DECLARE Ref_OutException		REFERENCE TO OutputExceptionList;
+		-- Get Node Name and Node Label from 1st level of RecoverableException
+		SET In_PosTmp 		= POSITION('#' IN Ref_InnerException.Name);
+		IF(In_PosTmp <> 0) THEN -- can be 0 in case error queues are missing and error is thrown back
+			SET Ref_EnVar.nodeName 	= COALESCE(SUBSTRING(Ref_InnerException.Name FROM 1 FOR(In_PosTmp - 1)), Ch_emptyValue);
+		END IF;
+		SET In_PosTmp 		= POSITION('.' IN Ref_InnerException.Label);
+		SET Ref_EnVar.nodeLabel 	= SUBSTRING(Ref_InnerException.Label FROM (In_PosTmp+1));
+		WHILE LASTMOVE (Ref_InnerException) AND FIELDNAME(Ref_InnerException) <> 'Insert' DO
+			MOVE Ref_InnerException LASTCHILD;
+		END WHILE;
+		-- Moving to the last Exception
+		MOVE Ref_InnerException PARENT;
+		--Extracting the exception Type from the last exception tree
+		SET Ch_ExceptionType = FIELDNAME(Ref_InnerException);
+		IF Ch_ExceptionType = 'UserException' THEN
+			--Set flag for userexception to send to invaliddata queue
+			SET Bl_ExceptionFlag = TRUE;
+			-- Point reference to Insert Segment of the Last User exception Tree
+			MOVE Ref_InsertList TO Ref_InnerException.Insert;
+			SET Ch_ErrorTmp = Ch_ExceptionType || Ch_Colon;
+			WHILE LASTMOVE(Ref_InsertList) DO
+				SET Ch_ErrorTmp = Ch_ErrorTmp || Ch_Colon || COALESCE(Ref_InsertList.Text, Ch_emptyValue);
+				MOVE Ref_InsertList NEXTSIBLING REPEAT TYPE NAME;
+			END WHILE;
+		ELSEIF Ch_ExceptionType = 'ParserException' THEN
+			-- Setting Parser Exception Flag to true to propagate through UserException terminal.
+			SET Bl_ParserExcFlag = TRUE;
+			-- Set error description with Exception Type and Text
+			SET Ch_ErrorTmp = Ch_ExceptionType || Ch_Colon || COALESCE(Ref_InnerException.Text, Ch_emptyValue);
+		ELSE
+			-- Set error description with Exception Type and Text
+			SET Ch_ErrorTmp = Ch_ExceptionType || Ch_Colon || COALESCE(Ref_InnerException.Text,Ch_emptyValue);
+		END IF;
+		-- Point reference to first Insert Segment of the last exception Tree
+		MOVE Ref_InsertList TO Ref_InnerException.Insert;
+		-- Get the Error Id from the last exception in the ExceptionList tree
+		SET Ref_EnVar.errorId = Ref_InnerException.Number;
+		-- Extract error description other than UserException
+		IF NOT Bl_ExceptionFlag THEN
+			-- Extract error description from Text fields under Insert Segments.
+			WHILE LASTMOVE(Ref_InsertList) DO
+				IF (Ref_InsertList.Type <> 2 AND Ref_InsertList.Text <> Ch_emptyValue)THEN
+					SET Ch_ErrorTmp = Ch_ErrorTmp || Ch_Colon || COALESCE(Ref_InsertList.Text, Ch_emptyValue);
+				END IF;
+				MOVE Ref_InsertList NEXTSIBLING;
+			END WHILE;
+		END IF;
+		-- Special processing for CAST exception		
+		IF (Ch_ExceptionType = 'ConversionException' OR Ch_ExceptionType = 'CastException')THEN
+			MOVE Ref_InnerException PARENT;
+			-- Obtain error text from Parent Exception
+			SET Ch_ErrorTmp = Ch_ErrorTmp || Ch_Colon || COALESCE(Ref_InnerException.Text,Ch_emptyValue);
+			-- Concatenate the repeating Insert field Text for better error description
+			MOVE Ref_InsertList TO Ref_InnerException.Insert;
+			WHILE LASTMOVE(Ref_InsertList) DO
+				SET Ch_ErrorTmp = Ch_ErrorTmp || Ch_Colon || COALESCE(Ref_InsertList.Text, Ch_emptyValue);
+				MOVE Ref_InsertList NEXTSIBLING REPEAT NAME;
+			END WHILE;	
+			SET Bl_ParserExcFlag = TRUE;		
+		END IF;
+		--Extract the summary form the detailed error message as separated by '-' in case of User Exception
+		SET In_PosTmp = POSITION('-' IN Ch_ErrorTmp);
+		IF In_PosTmp > 0 THEN			
+			SET Ref_EnVar.errorSummary = SUBSTRING(Ch_ErrorTmp FROM 1 FOR (In_PosTmp-2));
+			SET Ref_EnVar.errorDetail  = Ch_ErrorTmp;
+		ELSE
+			SET Ref_EnVar.errorSummary = Ch_ErrorTmp;
+			SET Ref_EnVar.errorDetail  = Ch_ErrorTmp;
+		END IF;
+		--Removing special character ' from the error description to make the error description more better
+		SET Ref_EnVar.errorDetail 			= REPLACE(Ref_EnVar.errorDetail, '''');		
+		SET Ref_EnVar.errorSummary 		= REPLACE(Ref_EnVar.errorSummary, '''');
+		SET OutputRoot.MQMD.Format 				= MQFMT_STRING;
+		CREATE FIELD OutputRoot.XMLNSC.errorDetails ;
+		DECLARE Ref_OutputMsg REFERENCE TO OutputRoot.XMLNSC.errorDetails;
+		IF Bl_ExceptionFlag OR Bl_ParserExcFlag THEN
+			CALL generateErrorMsg('Data',Ref_Input,Ref_EnVar,Ref_OutputMsg,Ch_emptyValue) ;	
+			PROPAGATE TO TERMINAL 'out1' DELETE NONE;
+		ELSE		
+			CALL generateErrorMsg('System',Ref_Input,Ref_EnVar,Ref_OutputMsg,Ch_emptyValue) ;	
+			PROPAGATE TO TERMINAL 'out2' DELETE NONE;		
+		END IF;
+		-- Setting error description in the environment
+		SET Ref_EnvErrorLog.ErrorDescription = Ref_OutputMsg;
+		IF UPPER(Environment.Variables.RollBackFlag) ='Y' THEN
+			THROW USER EXCEPTION MESSAGE 2951 VALUES(Ref_EnVar.errorDetail) ;		
+		END IF;
+		
+
+		SET Environment.Variables.Log4jFramework.Data = varTrackingIds || Ch_ErrorTmp ||' Exception Occurs' ;
+		SET Environment.Variables.Log4jFramework.LogLevel = 'ERROR';
+		SET Environment.Variables.Log4jFramework.InterfaceNo = 'ERROR';
+		CALL com.prolifics.commonfunctions.SendToLog4jQueue(Environment.Variables.Log4jFramework);
+		RETURN FALSE;
+	END;
+	
+	/*
+	 * This procedure is used to construct error messsage
+	 *
+	 * Parameters: 
+	 * Input			: errorType			- 	variable that contains type of error [System or Data]
+	 * Input			: Ref_Input			-	Reference to InputRoot
+	 * Input/Output		: Ref_EnvVar		-	Reference to environment variables
+	 * Input/Output		: Ref_OutputMsg		-	Reference to output message
+	 * Input			: Ch_emptyValue		-	Character variable with empty space
+	 */
+	CREATE PROCEDURE generateErrorMsg(IN 	errorType 		CHAR,		IN Ref_Input 		REFERENCE,	INOUT Ref_EnvVar REFERENCE, 
+									  INOUT Ref_OutputMsg 	REFERENCE, 	IN Ch_emptyValue 	CHAR )  
+	BEGIN
+		DECLARE In_Encoding 	INTEGER  	COALESCE(Ref_Input.Properties.Encoding, 546);
+		DECLARE In_CCSID		INTEGER 	COALESCE(Ref_Input.Properties.CodedCharSetId, 1208);
+		DECLARE Ch_dateFormat	CHARACTER	'yyyy-MM-dd HH:mm:ss';
+		DECLARE Ch_PutDateTime 	CHARACTER ;
+			-- Storing current timestamp in a temporary variable	
+		DECLARE Ch_TempDate 	CHARACTER  	CAST(CURRENT_GMTTIMESTAMP AS CHARACTER FORMAT Ch_dateFormat); 
+		-- Reformating the date value as desired by target application
+		DECLARE  Ch_CurDateTime CHARACTER  	OVERLAY(Ch_TempDate PLACING 'T' FROM 11) || '+0:00';
+		-- Storing message put date in a temporary variable
+		SET Ch_TempDate = CAST(InputRoot.MQMD.PutDate  AS CHARACTER FORMAT Ch_dateFormat); 
+			-- Reformating the date value as desired by target application
+			IF (Ch_TempDate <> Ch_emptyValue) THEN
+				SET Ch_PutDateTime = OVERLAY(Ch_TempDate PLACING 'T' FROM 11) || '+0:00';
+			ELSE
+				SET Ch_PutDateTime =  CAST(CURRENT_TIMESTAMP AS CHARACTER FORMAT 'yyyy-MM-dd''T''HH:mm:ss.SZZZ');
+			END IF;
+			SET Ref_OutputMsg.inputQueue		 	= COALESCE(Ref_Input.MQMD.SourceQueue, 
+															  'Input Message is not from MQ: Node Name - ' || 
+															   Ref_EnvVar.nodeName);
+			SET Ref_OutputMsg.nodeName				= Ref_EnvVar.nodeName;
+			SET Ref_OutputMsg.labelName				= Ref_EnvVar.nodeLabel;
+			SET Ref_OutputMsg.errorType 			= errorType;
+			SET Ref_OutputMsg.errorId 				= Ref_EnvVar.errorId;
+			SET Ref_OutputMsg.errorDetail 			= Ref_EnvVar.errorDetail;
+			SET Ref_OutputMsg.errorSummary			= Ref_EnvVar.errorSummary;
+			SET Ref_OutputMsg.putDateTime 			= Ch_PutDateTime;
+			 -- should be mapped in parent flow
+			SET Ref_OutputMsg.sourceSysApplnId 		= COALESCE(Ref_EnvVar.sourceSysApplnId, Ch_emptyValue);
+			SET Ref_OutputMsg.targetSysApplnId 		= COALESCE(Ref_EnvVar.targetSysApplnId, Ch_emptyValue); 
+			SET Ref_OutputMsg.interfaceId 			= COALESCE(Ref_EnvVar.interfaceId, Ch_emptyValue);
+			SET Ref_OutputMsg.transactionId 		= UUIDASCHAR;
+			SET Ref_OutputMsg.payload				= ASBITSTREAM(InputRoot.*[<], 
+																  In_Encoding, 
+																  In_CCSID, 
+																  Ref_Input.Properties.MessageSet, 
+																  Ref_Input.Properties.MessageType, 
+																  Ref_Input.Properties.MessageFormat, 
+																  RootBitStream) ; 
+	END ;
+	
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+END MODULE;

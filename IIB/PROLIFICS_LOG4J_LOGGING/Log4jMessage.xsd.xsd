@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.prolifics.com/iib/Log4jMessage" xmlns:ns0="http://www.prolifics.com/iib/Log4jMessage">
+	
+	<xsd:complexType name="Log4jMessageType">
+        <xsd:all>
+			<xsd:element name="Application" type="xsd:string" nillable="false"/>
+			<xsd:element name="InterfaceNo" nillable="false" type="xsd:string">
+
+			</xsd:element>
+			<xsd:element name="MessageFlow" type="xsd:string" nillable="false"/>
+			<xsd:element name="LogLevel" nillable="false">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="ERROR"></xsd:enumeration>
+						<xsd:enumeration value="INFO"></xsd:enumeration>
+						<xsd:enumeration value="DEBUG"></xsd:enumeration>
+						<xsd:enumeration value="WARN"></xsd:enumeration>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="LogData" type="xsd:string" />
+		</xsd:all>
+	</xsd:complexType>
+	
+	<xsd:element name="Log4jMessage" type="ns0:Log4jMessageType"/>
+</xsd:schema>

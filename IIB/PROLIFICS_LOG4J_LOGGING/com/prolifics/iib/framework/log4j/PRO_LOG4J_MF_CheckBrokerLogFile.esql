@@ -1,0 +1,57 @@
+BROKER SCHEMA com.prolifics.iib.framework.log4j
+
+DECLARE ns NAMESPACE 'http://www.prolifics.com/iib/Log4jMessage';
+
+DECLARE udpBrokerLogPath EXTERNAL CHARACTER '';
+DECLARE udpDefaultLogLevel EXTERNAL CHARACTER '';
+DECLARE udpLog4jLogPath EXTERNAL CHARACTER '';
+
+DECLARE appenderList SHARED ROW; -- Use appenderList variable to avoid calling subflow everytime 
+
+CREATE COMPUTE MODULE PRO_LOG4J_MF_CheckBrokerLogFile
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD Environment.Variables;
+		DECLARE refEnvVar REFERENCE TO Environment.Variables;
+		CREATE LASTCHILD OF Environment.Variables DOMAIN 'XMLNSC' NAME 'Log4jMessage';
+		SET refEnvVar.Log4jMessage = InputRoot.XMLNSC.ns:Log4jMessage;
+		
+		DECLARE varFolderSeperator CHARACTER RIGHT(udpBrokerLogPath,1);-- || RIGHT(udpBrokerLogPath,1);--TODO //Has to be changed
+		DECLARE varInterfaceNo CHARACTER CAST(InputRoot.XMLNSC.ns:Log4jMessage.InterfaceNo AS CHARACTER);
+		DECLARE varBrokerLogXMLFilePath CHARACTER udpBrokerLogPath || 'brokerlog.xml';
+		
+		DECLARE varFileCheck INTEGER CheckIfFileExists(varBrokerLogXMLFilePath);
+		IF varFileCheck = 0 THEN
+			SET OutputLocalEnvironment.Destination.File.Directory 	= udpBrokerLogPath || 'template' || varFolderSeperator;
+			SET OutputLocalEnvironment.Destination.File.Name 		= 'brokerlog.xml';
+			
+			SET refEnvVar.BrokerLogPath = udpBrokerLogPath;
+			SET refEnvVar.Log4jLogPath = udpLog4jLogPath;
+			SET refEnvVar.DefaultLogLevel = udpDefaultLogLevel;
+			SET refEnvVar.Operation = 'CREATE';
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+		ELSEIF varFileCheck = 1 THEN
+			SET OutputLocalEnvironment.Destination.File.Directory 	= udpBrokerLogPath;
+			SET OutputLocalEnvironment.Destination.File.Name 		= 'brokerlog.xml';
+			
+			SET refEnvVar.BrokerLogPath = udpBrokerLogPath;
+			SET refEnvVar.Log4jLogPath = udpLog4jLogPath;
+			SET refEnvVar.DefaultLogLevel = udpDefaultLogLevel;
+			SET refEnvVar.Operation = 'UPDATE';
+			PROPAGATE TO TERMINAL 1 DELETE NONE;
+		ELSE
+			THROW USER EXCEPTION CATALOG 'PROLIFICS_UNKNOWN_ERROR' MESSAGE 50101 VALUES('Error in finding the BrokerLogXMLFile : ' || varBrokerLogXMLFilePath);
+		END IF;
+
+		RETURN FALSE;
+		
+	END;
+
+	CREATE FUNCTION CheckIfFileExists(IN filePathString CHARACTER) 
+	RETURNS INTEGER LANGUAGE JAVA EXTERNAL NAME
+	"com.prolifics.iib.commonservices.PRO_CMNSRV_GetDetails.CheckIfFileExists";
+	
+
+
+END MODULE;
