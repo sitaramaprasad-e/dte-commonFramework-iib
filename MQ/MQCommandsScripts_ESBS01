@@ -14,4 +14,4 @@ DEFINE QLOCAL('PRO.LOG4J.ERROR.QL')  DESCR('ESBS01 ')  DEFPSIST(YES)
 DEFINE QLOCAL('PRO.LOG4J.IN.QL')  DESCR('ESBS01 ')  DEFPSIST(YES)
 
 
-#####Creation of queues#####
+#####Creation of queues######
