@@ -11,11 +11,11 @@ pipeline {
        		steps{
 			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
 			  //Copying the script file to target server
-			 sh 'scp ./MQ/deploymq.sh jenkins@10.0.10.160:/home/jenkins'
+			 sh 'scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/jenkins'
 			 // Change the permissions of the file 
 			 sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
 			 //Run the script on remote server
-			 sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
+			 sh 'ssh -o StrictHostKeyChecking=no iibadm@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
 			 // Delete the script file from the remote server
 			 sh 'ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploymq.sh"'
     		
