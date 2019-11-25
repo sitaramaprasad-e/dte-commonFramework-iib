@@ -12,7 +12,7 @@ pipeline {
 	stages{
 		stage('Checkout Code'){
            	 steps {
-              	  checkout([$class: 'GitSCM', branches: [[name: '*/feature']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'load']], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:dteenergy/esb-pf-common-retryFramework-iib.git']]])
+              	  checkout([$class: 'GitSCM', branches: [[name: '*/feature']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'load']], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:sitaramaprasad-e/dte-commonFramework-iib.git']]])
           	  }
           
        } 
