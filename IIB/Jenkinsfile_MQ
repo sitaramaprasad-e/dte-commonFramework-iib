@@ -2,7 +2,7 @@ def remote = [:]
 remote.name = 'cvs.ad.prolifics.com'
 remote.host = 'cvs.ad.prolifics.com'
 remote.allowAnyHosts = true
-withCredentials([usernamePassword(credentialsId: 'esbcitoiib', passwordVariable: 'password', usernameVariable: 'userName')])
+withCredentials([usernamePassword(credentialsId: 'iibadmuserpass', passwordVariable: 'password', usernameVariable: 'userName')])
         {
 			remote.user = userName
 			remote.password = password
