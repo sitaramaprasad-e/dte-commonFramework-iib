@@ -16,6 +16,13 @@ pipeline {
           	  }
           
        } 
+       stage('MQ'){
+       		steps{
+     			sshagent(['iibadm']) {
+			   sh 'ssh iibadm@aix10020 ". /INT/usr/mqm/bin/setmqenv -s; cd /home/esbci; runmqsc PBCTEST < deploymq.sh"'
+    			}
+		}
+       }
      
 		stage('Remote SSH to MQ Server') {
 		steps{
