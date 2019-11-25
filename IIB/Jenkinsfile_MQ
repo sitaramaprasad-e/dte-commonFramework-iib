@@ -16,27 +16,27 @@ pipeline {
           	  }
           
        } 
-       stage('MQ'){
-       		steps{
-     			sshagent(['iibadm']) {
-			    sh 'ssh iibadm@10.0.10.160 ". /INT/usr/mqm/bin/setmqenv -s; cd /home/esbci; ls"'
-    			}
-		}
-       }
-		//stage('Remote SSH') {
-		//steps{
+      // stage('MQ'){
+       	//	steps{
+     	//		sshagent(['iibadm']) {
+	//		    sh 'ssh iibadm@10.0.10.160 ". /INT/usr/mqm/bin/setmqenv -s; cd /home/esbci; ls"'
+    	//		}
+	//	}
+       //}
+		stage('Remote SSH') {
+		steps{
 			//writeFile file: 'abc.sh', text: 'ls'
 			//sshCommand remote: remote, command: 'for i in {1..5}; do echo -n \"Loop \$i \"; date ; sleep 1; done'
-		   	//sshPut remote: remote, from: '/var/lib/jenkins/workspace/esb-pf-common-retryFramework-iib-mqtest/MQ/deploymq.sh', into: '.'
-		//	sshPut remote: remote, from: '/var/lib/jenkins/workspace/esb-pf-common-retryFramework-iib-mqtest/abc.sh', into: '.'
+		   	sshPut remote: remote, from: '/var/lib/jenkins/workspace/esb-pf-common-retryFramework-iib-mqtest/MQ/deploymq.sh', into: '.'
+			//sshPut remote: remote, from: '/var/lib/jenkins/workspace/esb-pf-common-retryFramework-iib-mqtest/abc.sh', into: '.'
 		    	//sshCommand remote: remote, command: "chmod +x deploymq.sh"
 			//sshPut remote: remote, from: 'abc.sh', into: '.'
 			//sshGet remote: remote, from: 'abc.sh', into: 'bac.sh', override: true
 		//	sshScript remote: remote, script: "abc.sh"
 			//sshScript remote: remote, script: "test1.sh"
-			//sshScript remote: remote, script: "./MQ/deploymq.sh"
-		//}
-            // }
+			sshScript remote: remote, script: "./MQ/deploymq.sh"
+		}
+            }
 	      }
 	      
 }
