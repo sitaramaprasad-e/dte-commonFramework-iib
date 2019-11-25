@@ -27,7 +27,7 @@ pipeline {
 		steps{
 			//writeFile file: 'abc.sh', text: 'ls'
 			//sshCommand remote: remote, command: 'for i in {1..5}; do echo -n \"Loop \$i \"; date ; sleep 1; done'
-		   	sshPut remote: remote, from: '/var/lib/jenkins/workspace/dte-commonFramework-iib/MQ/deploymq.sh', into: '.'
+		   	sshPut remote: remote, from: '/var/lib/jenkins/workspace/dte-commonFramework-mq/MQ/deploymq.sh', into: '.'
 			//sshPut remote: remote, from: '/var/lib/jenkins/workspace/esb-pf-common-retryFramework-iib-mqtest/abc.sh', into: '.'
 		    	//sshCommand remote: remote, command: "chmod +x deploymq.sh"
 			//sshPut remote: remote, from: 'abc.sh', into: '.'
