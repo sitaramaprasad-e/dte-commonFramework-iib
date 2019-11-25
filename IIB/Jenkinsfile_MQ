@@ -11,7 +11,7 @@ pipeline {
        		steps{
 			  sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
 			  //Copying the script file to target server
-			 sh 'scp ./MQ/deploymq.sh -i /home/iibadm/.ssh/id_rsa iibadm@10.0.10.160:/home/iibadm'
+			 sh 'scp ./MQ/deploymq.sh ssh -i ~/.ssh/id_rsa iibadm@10.0.10.160:/home/iibadm'
 			 // Change the permissions of the file 
 			 sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
 			 //Run the script on remote server
