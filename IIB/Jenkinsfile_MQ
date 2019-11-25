@@ -7,7 +7,7 @@ pipeline {
           	  }
           
        } 
-       stage('MQ'){
+       stage('Execute MQ scripts on Remote server'){
        		steps{
 			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
 			  //Copying the script file to target server
