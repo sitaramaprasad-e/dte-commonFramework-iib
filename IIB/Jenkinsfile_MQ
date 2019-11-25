@@ -21,21 +21,20 @@ pipeline {
 			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
 			  sh 'scp ./MQ/deploymq.sh jenkins@10.0.10.160:/home/jenkins'
 			   sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
-			   sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh"'
+			   sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
     		
 		}
        }
      
-		stage('Remote SSH to MQ Server') {
-		steps{
-			sshCommand remote: remote, command: 'ls -ltr'
-			sshCommand remote: remote, command: 'for i in {1..5}; do echo -n \"Loop \$i \"; date ; sleep 1; done'
-		   	sshPut remote: remote, from: './MQ/deploymq.sh', into: '.'
-			sshScript remote: remote, script: "./MQ/deploymq.sh"
-			sshRemove remote: remote, path: "deploymq.sh"
-
-		}
-            }
+	//	stage('Remote SSH to MQ Server') {
+	//	steps{
+	//		sshCommand remote: remote, command: 'ls -ltr'
+	//		sshCommand remote: remote, command: 'for i in {1..5}; do echo -n \"Loop \$i \"; date ; sleep 1; done'
+	//	   	sshPut remote: remote, from: './MQ/deploymq.sh', into: '.'
+	//		sshScript remote: remote, script: "./MQ/deploymq.sh"
+	//		sshRemove remote: remote, path: "deploymq.sh"
+		//}
+            //}
 	      }
 	      
 }
