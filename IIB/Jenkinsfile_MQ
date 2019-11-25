@@ -19,6 +19,7 @@ pipeline {
        stage('MQ'){
        		steps{
      			//sshagent(['iibadm']) {
+			ssh -v -i /home/iibadm/.ssh/id_rsa iibadm@10.0.10.160
 			   sh 'ssh -o StrictHostKeyChecking=no iibadm@10.0.10.160 "cd /home/iibadm; runmqsc PBCTEST < deploymq.sh"'
     			//}
 		}
