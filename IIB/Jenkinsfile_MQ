@@ -21,6 +21,20 @@ pipeline {
     		
 		}
        }
+       stage('Execute IIB scripts on Remote server'){
+       		steps{
+			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
+			  //Copying the script file to target server
+			 sh 'scp ./IIB/configurations/deploy_iib_conf_svcs.sh jenkins@10.0.10.160:/home/jenkins'
+			 // Change the permissions of the file 
+			 sh 'ssh jenkins@10.0.10.160 chmod +x deploy_iib_conf_svcs.sh'
+			 //Run the script on remote server
+			 sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploy_iib_conf_svcs.sh TEST TEST TEST DEV"'
+			 // Delete the script file from the remote server
+			 sh 'ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploy_iib_conf_svcs.sh"'
+    		
+		}
+       }
      
 	     }
 	      
