@@ -1,4 +1,5 @@
-#!/bin/ksh
+#!/bin/bash
+source 
 # $DEPLOYMENT_NAME $QMGR $EXECGRP $ENV
 DEPLOYMENT_NAME=$1
 BROKER=$2
