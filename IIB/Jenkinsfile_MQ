@@ -17,7 +17,7 @@ pipeline {
 			 //Run the script on remote server
 			 sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
 			 // Delete the script file from the remote server
-			 ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploymq.sh"
+			 sh 'ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploymq.sh"'
     		
 		}
        }
