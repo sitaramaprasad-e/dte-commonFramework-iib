@@ -22,7 +22,7 @@ pipeline {
 			sshCommand remote: remote, command: 'ls -ltr'
 			sshCommand remote: remote, command: 'for i in {1..5}; do echo -n \"Loop \$i \"; date ; sleep 1; done'
 		   	sshPut remote: remote, from: './MQ/deploymq.sh', into: '.'
-			sshScript remote: remote, script: "./MQ/deploymq.sh PBCTEST"
+			sshScript remote: remote, script: "./MQ/deploymq.sh", args:[PBCTEST]
 			sshRemove remote: remote, path: "deploymq.sh"
 
 		}
