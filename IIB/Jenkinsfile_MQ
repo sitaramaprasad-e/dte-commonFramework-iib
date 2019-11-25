@@ -2,12 +2,11 @@ def remote = [:]
 remote.name = 'cvs.ad.prolifics.com'
 remote.host = 'cvs.ad.prolifics.com'
 remote.allowAnyHosts = true
-withCredentials([sshUserPrivateKey(credentialsId: 'iibadm', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')])
-         {
+withCredentials([usernamePassword(credentialsId: 'esbcitoiib', passwordVariable: 'password', usernameVariable: 'userName')])
+        {
 			remote.user = userName
-			remote.identityFile = identity
+			remote.password = password
 		}
-
 pipeline {
    	agent any
 	stages{
