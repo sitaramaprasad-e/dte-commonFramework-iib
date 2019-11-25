@@ -1,5 +1,5 @@
 #!/bin/bash
-source 
+source /opt/IBM/iib-10.0.0.16/server/bin/mqsiprofile
 # $DEPLOYMENT_NAME $QMGR $EXECGRP $ENV
 DEPLOYMENT_NAME=$1
 BROKER=$2
