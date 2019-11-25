@@ -19,8 +19,8 @@ pipeline {
        stage('MQ'){
        		steps{
      			//sshagent(['iibadm']) {
-			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160'
-			  sh 'ssh jenkins@10.0.10.160 "cd /home/jenkins; 'chmod +x deploymq.sh'"
+			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
+			   sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
 			   sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh"'
     			//}
 		}
