@@ -9,7 +9,7 @@ pipeline {
        } 
        stage('Execute MQ scripts on Remote server'){
        		steps{
-			  sh 'ssh -v -i ~/.ssh/id_rsa iibadm@10.0.10.160' 
+			  sh 'ssh -v -i /home/iibadm/.ssh/id_rsa iibadm@10.0.10.160' 
 			  //Copying the script file to target server
 			 sh 'scp ./MQ/deploymq.sh ssh -i ~/.ssh/id_rsa iibadm@10.0.10.160:/home/iibadm'
 			 // Change the permissions of the file 
