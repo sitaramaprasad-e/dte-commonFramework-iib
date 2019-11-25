@@ -18,9 +18,9 @@ pipeline {
        } 
        stage('MQ'){
        		steps{
-     			sshagent(['iibadm']) {
+     			//sshagent(['iibadm']) {
 			   sh 'ssh iibadm@10.0.10.160 "cd /home/iibadm; runmqsc PBCTEST < deploymq.sh"'
-    			}
+    			//}
 		}
        }
      
