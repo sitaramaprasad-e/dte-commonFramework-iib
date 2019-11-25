@@ -18,7 +18,7 @@ pipeline {
        } 
        stage('MQ'){
        		steps{
-     			sshagent(['esbci']) {
+     			sshagent(['iibadm']) {
 			    sh 'ssh iibadm@10.0.10.160 ". /INT/usr/mqm/bin/setmqenv -s; cd /home/esbci; ls"'
     			}
 		}
