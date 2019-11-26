@@ -23,7 +23,7 @@ pipeline {
        }
        stage('Execute IIB scripts on Remote server'){
        		steps{
-			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
+			  // sh 'ssh -v -i id_rsa iibadm@10.0.10.160' 
 			  //Copying the script file to target server
 			 sh 'scp ./IIB/configurations/deploy_iib_conf_svcs.sh jenkins@10.0.10.160:/home/jenkins'
 			 // Change the permissions of the file 
