@@ -14,9 +14,9 @@ pipeline {
 			sh 'whoami'
 			 //sh 'ssh -v -i /home/iibadm/.ssh/id_rsa iibadm@10.0.10.160;sudo -i' 
 			  //Copying the script file to target server
-			sh 'sudo -u iibadm -s;whoami;scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/iibadm'
+			//sh 'sudo -u iibadm -s;whoami;scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/iibadm'
 			 // Change the permissions of the file 
-			 sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
+			 sh 'ssh sudo -u iibadm -s;whoami;iibadm@10.0.10.160 chmod +x deploymq.sh'
 			 //Run the script on remote server
 			 sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
 			 // Delete the script file from the remote server
