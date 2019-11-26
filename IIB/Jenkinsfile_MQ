@@ -11,9 +11,8 @@ pipeline {
        		steps{
 			sh 'whoami'
 			  //Copying the script file to target server
-			//sh 'sudo -u iibadm -s;whoami;scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/iibadm'
+			sh 'sudo -u iibadm -s;whoami;scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/iibadm'
 			 // Change the permissions of the file 
-			 sh 'sudo -u iibadm -s;whoami;iibadm@10.0.10.160;ls'
 			 sh 'ssh -t sudo -u iibadm -s;whoami;iibadm@10.0.10.160 chmod +x deploymq.sh'
 			 //Run the script on remote server
 			 sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
