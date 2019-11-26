@@ -10,6 +10,8 @@ pipeline {
        stage('Execute MQ scripts on Remote server'){
        		steps{
 			sh 'whoami'
+			sh 'sudo -i'
+			sh 'whoami'
 			 sh 'ssh -v -i /home/iibadm/.ssh/id_rsa iibadm@10.0.10.160' 
 			  //Copying the script file to target server
 			 sh 'scp ./MQ/deploymq.sh ssh -i ~/.ssh/id_rsa iibadm@10.0.10.160:/home/iibadm'
