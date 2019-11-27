@@ -40,9 +40,11 @@ pipeline {
         // Either override and deploy the BAR (with or without broker file), or upload it to UCD so it can be deployed from there (one of the below steps should be uncommented)
         
         stage('Override and Deploy BAR') {
-         steps {
-                sh "/buildconductor/iib/run-automation.sh overrideAndDeploy commonframework na na na TEST webuser1 passw0rd RetryApplication IIB/overrides/RetryApplication-ST.properties ../brokerFiles-load/DEV/TEST.broker"
-        
+	steps {
+		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId:'iib-cred', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']])
+              {
+                sh "/buildconductor/iib/run-automation.sh overrideAndDeploy commonframework na na na TEST $USERNAME $PASSWORD RetryApplication IIB/overrides/RetryApplication-ST.properties ../brokerFiles-load/DEV/TEST.broker"
+	      }
           }
         }       
     }
