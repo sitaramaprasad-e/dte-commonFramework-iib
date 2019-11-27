@@ -43,7 +43,7 @@ pipeline {
 	steps {
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId:'iib-cred', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']])
               {
-                sh "/buildconductor/iib/run-automation.sh overrideAndDeploy commonframework na na na TEST $USERNAME $PASSWORD RetryApplication IIB/overrides/RetryApplication-ST.properties ../brokerFiles-load/DEV/TEST.broker"
+                sh "/buildconductor/iib/run-automation.sh overrideAndDeploy commonframework na na na PBCIS $USERNAME $PASSWORD RetryApplication IIB/overrides/RetryApplication-ST.properties ../brokerFiles-load/DEV/TEST.broker"
 	      }
           }
         }       
