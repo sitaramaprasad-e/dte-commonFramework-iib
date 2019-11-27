@@ -1,41 +1,47 @@
+def remote = [:]
+remote.name = 'cvs.ad.prolifics.com'
+remote.host = 'cvs.ad.prolifics.com'
+remote.allowAnyHosts = true
+withCredentials([usernamePassword(credentialsId: 'iibadmuserpass', passwordVariable: 'password', usernameVariable: 'userName')])
+        {
+			remote.user = userName
+			remote.password = password
+		}
+properties([
+        parameters([
+            string(name: 'QMNAME', defaultValue: '', description: 'Enter the QM Name')
+        ])
+    ]) 
+
 pipeline {
    	agent any
 	stages{
 		stage('Checkout Code'){
            	 steps {
-              	  checkout([$class: 'GitSCM', branches: [[name: '*/feature']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'load']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/sitaramaprasad-e/dte-commonFramework-iib.git']]])
+              	  checkout([$class: 'GitSCM', branches: [[name: '*/feature']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'load']], submoduleCfg: [], userRemoteConfigs: [[url: 'git@github.com:sitaramaprasad-e/dte-commonFramework-iib.git']]])
           	  }
           
        } 
-       stage('Execute MQ scripts on Remote server'){
+       stage('MQ'){
        		steps{
-			sh 'whoami'
-			  //Copying the script file to target server
-			sh 'sudo su - iibadm;id;scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/iibadm'
-			 // Change the permissions of the file 
-			 sh 'sudo -u iibadm -s;whoami;ssh iibadm@10.0.10.160 chmod +x deploymq.sh'
-			 //Run the script on remote server
-			 sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
-			 // Delete the script file from the remote server
-			 sh 'ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploymq.sh"'
-    		
-		}
-       }
-       stage('Execute IIB scripts on Remote server'){
-       		steps{
-			  // sh 'ssh -v -i id_rsa iibadm@10.0.10.160' 
-			  //Copying the script file to target server
-			// sh 'scp ./IIB/configurations/deploy_iib_conf_svcs.sh jenkins@10.0.10.160:/home/jenkins'
-			 // Change the permissions of the file 
-			 sh 'ssh jenkins@10.0.10.160 chmod +x deploy_iib_conf_svcs.sh'
-			 //Run the script on remote server
-			 sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploy_iib_conf_svcs.sh TEST TEST TEST DEV"'
-			 // Delete the script file from the remote server
-			 sh 'ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploy_iib_conf_svcs.sh"'
+			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
+			  sh 'scp ./MQ/deploymq.sh jenkins@10.0.10.160:/home/jenkins'
+			   sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
+			   sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
+			   ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploymq.sh"
     		
 		}
        }
      
-	     }
+	//	stage('Remote SSH to MQ Server') {
+	//	steps{
+	//		sshCommand remote: remote, command: 'ls -ltr'
+	//		sshCommand remote: remote, command: 'for i in {1..5}; do echo -n \"Loop \$i \"; date ; sleep 1; done'
+	//	   	sshPut remote: remote, from: './MQ/deploymq.sh', into: '.'
+	//		sshScript remote: remote, script: "./MQ/deploymq.sh $QMNAME"
+	//		sshRemove remote: remote, path: "deploymq.sh"
+		//}
+            //}
+	      }
 	      
 }
