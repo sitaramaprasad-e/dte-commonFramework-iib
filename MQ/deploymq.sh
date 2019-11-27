@@ -1,5 +1,5 @@
 #!/bin/bash
-QMGR=$1
+source /opt/mqm/bin/setmqenv -n Installation1
 runmqsc PBCTEST <<STREAM
 def qlocal(EAMSR.REQUEST.FROM.INSERVICE) DESCR('Drop the eamsr message from Inservices to Maximo')  MAXDEPTH(10000) DEFPSIST(YES) REPLACE
 def qlocal(EAMSR.REQUEST.FROM.INSERVICE.BACKOUT) DESCR('Drop the eamsr message from Inservices to Maximo') MAXDEPTH(10000) DEFPSIST(YES) REPLACE
