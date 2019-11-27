@@ -2,10 +2,10 @@ def remote = [:]
 remote.name = 'cvs.ad.prolifics.com'
 remote.host = 'cvs.ad.prolifics.com'
 remote.allowAnyHosts = true
-withCredentials([usernamePassword(credentialsId: 'iibadmuserpass', passwordVariable: 'password', usernameVariable: 'userName')])
-        {
+withCredentials([sshUserPrivateKey(credentialsId: 'esbci4', keyFileVariable: 'identity', passphraseVariable: '', usernameVariable: 'userName')]) {
 			remote.user = userName
-			remote.password = password
+			remote.identityFile = identity
+			sshPut remote: remote, from: 'jenkins', into: './jenkins.worked'
 		}
 properties([
         parameters([
