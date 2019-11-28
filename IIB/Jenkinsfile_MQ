@@ -14,7 +14,14 @@ properties([
     ]) 
 
 pipeline {
-   	agent any
+   	agent {
+        docker { 
+            image 'sitaramdocke/jenkins-buildconductor-mq-iib:edge' 
+            label 'docker'
+            args '-u root'
+          }
+        
+    }
 	stages{
 		stage('Checkout Code'){
            	 steps {
