@@ -15,9 +15,7 @@ properties([
 
 pipeline {
    	agent any
-        
-    }
-	stages{
+   	stages{
 		stage('Checkout Code'){
            	 steps {
               	  checkout([$class: 'GitSCM', branches: [[name: '*/feature']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'load']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/sitaramaprasad-e/dte-commonFramework-iib.git']]])
