@@ -29,7 +29,7 @@ pipeline {
 			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
 			  sh 'scp ./MQ/deploymq.sh jenkins@10.0.10.160:/home/jenkins'
 			  sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
-			  sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST"'
+			  sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
 			  sh 'ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploymq.sh"'
     		
 		}
