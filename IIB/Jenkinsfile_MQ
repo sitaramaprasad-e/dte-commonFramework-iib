@@ -14,12 +14,7 @@ properties([
     ]) 
 
 pipeline {
-   	agent {
-        docker { 
-            image 'sitaramdocke/jenkins-buildconductor-mq-iib:edge' 
-            label 'docker'
-            args '-u root'
-          }
+   	agent any
         
     }
 	stages{
