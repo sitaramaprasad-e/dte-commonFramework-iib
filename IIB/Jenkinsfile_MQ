@@ -28,7 +28,7 @@ pipeline {
        		steps{
 			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
 			  sh 'whoami'
-			  sh 'sudo -u iibadm -s;whoami;scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/iibadm'
+			  sh 'ssh -t 10.0.10.160 sudo -u iibadm -s;whoami;scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/iibadm'
 			  sh 'scp ./MQ/deploymq.sh jenkins@10.0.10.160:/home/jenkins'
 			  sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
 			  sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
