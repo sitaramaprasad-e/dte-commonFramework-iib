@@ -7,11 +7,11 @@ withCredentials([usernamePassword(credentialsId: 'iibadmuserpass', passwordVaria
 			remote.user = userName
 			remote.password = password
 		}
-properties([
-        parameters([
-            string(name: 'QMNAME', defaultValue: 'PBCTEST', description: 'Enter the QM Name')
-        ])
-    ]) 
+//properties([
+  //      parameters([
+    //        string(name: 'QMNAME', defaultValue: 'PBCTEST', description: 'Enter the QM Name')
+     //   ])
+    //]) 
 
 pipeline {
    	agent any
