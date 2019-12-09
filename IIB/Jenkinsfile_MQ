@@ -38,7 +38,7 @@ pipeline {
        		steps{
 			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
 			  sh 'scp ./IIB/configurations/deploy_iib_conf_svcs.sh jenkins@10.0.10.160:/home/jenkins'
-			 // sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
+			  sh 'ssh jenkins@10.0.10.160 chmod +x deploy_iib_conf_svcs.sh'
 			  sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploy_iib_conf_svcs.sh TEST TEST TEST DEV"'
 			  sh 'ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploy_iib_conf_svcs.sh"'
     		
