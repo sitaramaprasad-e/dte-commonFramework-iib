@@ -2,11 +2,7 @@ def remote = [:]
 remote.name = 'cvs.ad.prolifics.com'
 remote.host = 'cvs.ad.prolifics.com'
 remote.allowAnyHosts = true
-withCredentials([usernamePassword(credentialsId: 'iibadmuserpass', passwordVariable: 'password', usernameVariable: 'userName')])
-        {
-			remote.user = userName
-			remote.password = password
-		}
+
 //properties([
   //      parameters([
     //        string(name: 'QMNAME', defaultValue: 'PBCTEST', description: 'Enter the QM Name')
@@ -25,6 +21,10 @@ pipeline {
      
        stage('MQ Objects creation'){
        		steps{
+		withCredentials([usernamePassword(credentialsId: 'iibadmuserpass', passwordVariable: 'password', usernameVariable: 'userName')])
+      		  {
+			remote.user = userName
+			remote.password = password
 			  // sh 'ssh -v -i id_rsa jenkins@10.0.10.160' 
 			 // sh 'whoami'
 			  //sh 'ssh -t 10.0.10.160 "sudo -u iibadm -s";whoami;scp ./MQ/deploymq.sh iibadm@10.0.10.160:/home/iibadm'
@@ -32,8 +32,8 @@ pipeline {
 			  sh 'ssh jenkins@10.0.10.160 chmod +x deploymq.sh'
 			  sh 'ssh -o StrictHostKeyChecking=no jenkins@10.0.10.160 "cd /home/jenkins; ./deploymq.sh PBCTEST1"'
 			  sh 'ssh jenkins@10.0.10.160 "rm -rf /home/jenkins/deploymq.sh"'
-    		
-		}
+			  }
+    		}
        }
        stage('IIB Config services creation'){
        		steps{
