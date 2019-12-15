@@ -4,7 +4,7 @@ pipeline {
     
     agent {
         docker { 
-            image 'sitaramdocke/jenkins-buildconductor-iib:edge' 
+            image 'greghodgkinson/jenkins-buildconductor-iib:edge' 
             label 'docker'
             args '-u root'
         }
